@@ -1,8 +1,8 @@
 # Faraz Ghaffar portfolio
 
-Midnight navy + champagne gold, liquid-glass surfaces, and an interactive Bitmoji-style hero:
-Faraz (short trimmed beard, confident smirk) types at his laptop in an evening office; move the cursor left or right and he looks over,
-move it to the center and he takes his headset off, waves, and points down to the work.
+Midnight navy + champagne gold, liquid-glass surfaces, and an interactive 3D hero: a cartoon Faraz in a
+suit sits at his laptop in an evening office. Move the cursor left or right and he swivels his chair to look;
+move it to the center and he spins round in the chair, greets you, then leans toward the work below.
 
 ## Files
 
@@ -11,13 +11,13 @@ move it to the center and he takes his headset off, waves, and points down to th
 | `index.html` | The page |
 | `styles.css` | Theme tokens, liquid glass, layout, scroll-driven reveals, responsive rules |
 | `office.js` | Draws the office background (city window, shelf, lamps) as inline SVG, seeded |
-| `character-art.js` | The character, laptop and desk artwork |
-| `character.js` | Character rig: cursor zones, state machine, arm IK, blinking, mouth shapes |
+| `character3d.js` | 3D scene: inflates the portrait into a mesh from its silhouette, seats it in a swivel chair behind a three.js laptop and mug, and animates it (cursor zones, swivel, chair spin, speech bubble). The desk in front is a CSS band |
+| `assets/faraz-3d.webp` | The character image (transparent background); also the first frame and the no-WebGL fallback |
 | `app.js` | Hero parallax, scroll-linked tech ribbon, glass sheen, card tilt, active nav, copy buttons |
 
 ## Deploy
 
-The repository root is the site: plain HTML, CSS and JS, with no build step, no framework and no image files.
+The repository root is the site: plain HTML, CSS and JS, with no build step and no framework (three.js loads from cdnjs).
 
 - **GitHub Pages:** Settings > Pages > Deploy from a branch > `main` / root.
 - **Vercel or Netlify:** import the repo and keep the defaults (no build command, output is the root).
@@ -25,11 +25,11 @@ The repository root is the site: plain HTML, CSS and JS, with no build step, no 
 
 ## Performance notes
 
+- three.js loads after the page is up; until then, or without WebGL, the plain image shows with the same motion in CSS 3D.
 - The character loop runs on `requestAnimationFrame` only while the hero is on screen and the tab is visible.
-- Only SVG attributes whose values changed are written each frame.
 - Scroll effects use one passive listener batched per frame; everything animates `transform`/`opacity`.
 - Section reveals use CSS scroll-driven animations (no JS); older browsers simply show the content.
-- The background is generated SVG, so the page ships zero image files.
+- The office background is generated SVG; the only image is the 60 KB character WebP.
 - `prefers-reduced-motion` turns off the ambient motion and parallax.
 
 ## Links used
