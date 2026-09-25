@@ -155,7 +155,7 @@
     const fit = () => {
       const cw = scene.clientWidth, ch = scene.clientHeight;
       if (!cw || !ch) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2, Math.sqrt(5.5e6 / (cw * ch)));
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.75, Math.sqrt(3.6e6 / (cw * ch)));
       renderer.setPixelRatio(dpr);
       renderer.setSize(cw, ch, false);
       camera.aspect = cw / ch;
@@ -254,7 +254,9 @@
     if (!visible || document.hidden) { running = false; return; }
     requestAnimationFrame(tick);
     const t = now();
-    if (state.mode === 'work' && t - state.t0 > 1.5 && (++frame & 1)) return; // idle: ~30fps
+    const scrolling = document.documentElement.classList.contains('scrolling');
+    ++frame;
+    if (scrolling || (state.mode === 'work' && t - state.t0 > 1.5 && frame & 1)) return; // paused while scrolling, ~30fps idle
     const dt = Math.min(.1, t - prev);
     prev = t;
     const T = targets(t);

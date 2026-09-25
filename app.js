@@ -1,6 +1,7 @@
-/* Page motion: momentum scrolling, hero parallax, scroll-linked tech ribbon, progress fallback,
-   glass sheen, card tilt, compact nav, active nav link and copy buttons.
-   One passive scroll listener, batched per frame. */
+/* Page motion: hero parallax, scroll-linked tech ribbon, progress fallback, card sheen and tilt,
+   compact nav with a gliding pill, active nav link and copy buttons. Scrolling itself stays native
+   (compositor-threaded), with one passive listener batched per frame; html.scrolling pauses the
+   ambient backdrop while you scroll so every frame goes to the scroll. */
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fineQ = matchMedia('(hover: hover) and (pointer: fine)');
@@ -8,26 +9,6 @@
   const hero = $('.hero'), office = $('#office'), scene = $('#scene'), intro = $('.intro'), bubble = $('#bubble'), cue = $('.cue');
   const ribbon = $('.ribbon'), track = $('.ribbon .track'), progress = $('.progress'), nav = $('.nav');
   const cssProgress = !reduce && window.CSS && CSS.supports('animation-timeline: scroll()');
-
-  /* ---------- momentum scrolling for wheels and trackpads (touch keeps native scrolling) ---------- */
-  if (!reduce && window.Lenis) {
-    const lenis = new Lenis({ duration: 1.15, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
-    const loop = time => { lenis.raf(time); requestAnimationFrame(loop); };
-    requestAnimationFrame(loop);
-    document.addEventListener('click', e => { // in-page links glide too, clearing the floating nav
-      const a = e.target.closest && e.target.closest('a[href^="#"]');
-      if (!a) return;
-      const id = a.getAttribute('href'), target = id === '#top' ? 0 : document.querySelector(id);
-      if (target === null) return;
-      e.preventDefault();
-      lenis.scrollTo(target, { offset: id === '#top' ? 0 : -84 });
-    });
-  }
-
-  /* ---------- liquid light: a soft band sweeps across each glass panel as it moves up the screen ---------- */
-  const lit = new Set();
-  const litIO = new IntersectionObserver(es => es.forEach(e => (e.isIntersecting ? lit.add(e.target) : lit.delete(e.target))));
-  document.querySelectorAll('main .glass, footer .glass').forEach(el => litIO.observe(el));
 
   /* ---------- scroll ---------- */
   let ticking = false;
@@ -37,10 +18,6 @@
     const y = scrollY, vh = innerHeight;
     nav.classList.toggle('scrolled', y > 40);
     if (!reduce) {
-      lit.forEach(el => {
-        const r = el.getBoundingClientRect(), q = (vh - r.top) / (vh + r.height);
-        el.style.setProperty('--sweep', (q * 150 - 25).toFixed(1) + '%');
-      });
       const hh = hero.offsetHeight;
       if (y < hh + 60) {
         const p = Math.min(1, y / hh);
@@ -62,7 +39,13 @@
       progress.style.transform = `scaleX(${max > 0 ? (y / max).toFixed(4) : 0})`;
     }
   }
-  addEventListener('scroll', onScroll, { passive: true });
+  let idle = 0;
+  addEventListener('scroll', () => {
+    if (!idle) document.documentElement.classList.add('scrolling');
+    clearTimeout(idle);
+    idle = setTimeout(() => { idle = 0; document.documentElement.classList.remove('scrolling'); }, 180);
+    onScroll();
+  }, { passive: true });
   addEventListener('resize', onScroll, { passive: true });
   update();
 
@@ -81,7 +64,7 @@
     office.style.translate = `${(-mx * 26).toFixed(1)}px ${(-my * 14).toFixed(1)}px`; // the 3D camera adds its own parallax
   }, { passive: true });
 
-  /* ---------- glass: the specular bloom follows the pointer, project cards lift and tilt ---------- */
+  /* ---------- project cards: the specular bloom follows the pointer, the card lifts and tilts ---------- */
   if (fineQ.matches && !reduce) {
     let raf = 0, last = null;
     document.addEventListener('pointermove', e => {
@@ -89,13 +72,13 @@
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
-        const el = last.target.closest && last.target.closest('.glass');
+        const el = last.target.closest && last.target.closest('.card');
         if (!el) return;
         const r = el.getBoundingClientRect();
         const x = (last.clientX - r.left) / r.width, y = (last.clientY - r.top) / r.height;
         el.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
         el.style.setProperty('--my', (y * 100).toFixed(1) + '%');
-        if (el.classList.contains('card')) el.style.transform = `perspective(1100px) translateY(-6px) rotateX(${((.5 - y) * 4).toFixed(2)}deg) rotateY(${((x - .5) * 5).toFixed(2)}deg)`;
+        el.style.transform = `perspective(1100px) translateY(-6px) rotateX(${((.5 - y) * 4).toFixed(2)}deg) rotateY(${((x - .5) * 5).toFixed(2)}deg)`;
       });
     }, { passive: true });
     document.querySelectorAll('.card').forEach(c => c.addEventListener('pointerleave', () => { c.style.transform = ''; }));
