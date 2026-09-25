@@ -1,12 +1,33 @@
-/* Page motion: hero parallax, scroll-linked tech ribbon, progress fallback, glass sheen,
-   card tilt, active nav link and copy buttons. One passive scroll listener, batched per frame. */
+/* Page motion: momentum scrolling, hero parallax, scroll-linked tech ribbon, progress fallback,
+   glass sheen, card tilt, compact nav, active nav link and copy buttons.
+   One passive scroll listener, batched per frame. */
 (() => {
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const fineQ = matchMedia('(hover: hover) and (pointer: fine)');
   const $ = s => document.querySelector(s);
   const hero = $('.hero'), office = $('#office'), scene = $('#scene'), intro = $('.intro'), bubble = $('#bubble'), cue = $('.cue');
-  const ribbon = $('.ribbon'), track = $('.ribbon .track'), progress = $('.progress');
+  const ribbon = $('.ribbon'), track = $('.ribbon .track'), progress = $('.progress'), nav = $('.nav');
   const cssProgress = !reduce && window.CSS && CSS.supports('animation-timeline: scroll()');
+
+  /* ---------- momentum scrolling for wheels and trackpads (touch keeps native scrolling) ---------- */
+  if (!reduce && window.Lenis) {
+    const lenis = new Lenis({ duration: 1.15, easing: t => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });
+    const loop = time => { lenis.raf(time); requestAnimationFrame(loop); };
+    requestAnimationFrame(loop);
+    document.addEventListener('click', e => { // in-page links glide too, clearing the floating nav
+      const a = e.target.closest && e.target.closest('a[href^="#"]');
+      if (!a) return;
+      const id = a.getAttribute('href'), target = id === '#top' ? 0 : document.querySelector(id);
+      if (target === null) return;
+      e.preventDefault();
+      lenis.scrollTo(target, { offset: id === '#top' ? 0 : -84 });
+    });
+  }
+
+  /* ---------- liquid light: a soft band sweeps across each glass panel as it moves up the screen ---------- */
+  const lit = new Set();
+  const litIO = new IntersectionObserver(es => es.forEach(e => (e.isIntersecting ? lit.add(e.target) : lit.delete(e.target))));
+  document.querySelectorAll('main .glass, footer .glass').forEach(el => litIO.observe(el));
 
   /* ---------- scroll ---------- */
   let ticking = false;
@@ -14,7 +35,12 @@
   function update() {
     ticking = false;
     const y = scrollY, vh = innerHeight;
+    nav.classList.toggle('scrolled', y > 40);
     if (!reduce) {
+      lit.forEach(el => {
+        const r = el.getBoundingClientRect(), q = (vh - r.top) / (vh + r.height);
+        el.style.setProperty('--sweep', (q * 150 - 25).toFixed(1) + '%');
+      });
       const hh = hero.offsetHeight;
       if (y < hh + 60) {
         const p = Math.min(1, y / hh);
@@ -55,7 +81,7 @@
     office.style.translate = `${(-mx * 26).toFixed(1)}px ${(-my * 14).toFixed(1)}px`; // the 3D camera adds its own parallax
   }, { passive: true });
 
-  /* ---------- liquid glass: sheen follows the pointer, cards tilt ---------- */
+  /* ---------- glass: the specular bloom follows the pointer, project cards lift and tilt ---------- */
   if (fineQ.matches && !reduce) {
     let raf = 0, last = null;
     document.addEventListener('pointermove', e => {
@@ -69,17 +95,35 @@
         const x = (last.clientX - r.left) / r.width, y = (last.clientY - r.top) / r.height;
         el.style.setProperty('--mx', (x * 100).toFixed(1) + '%');
         el.style.setProperty('--my', (y * 100).toFixed(1) + '%');
-        if (el.classList.contains('card')) el.style.transform = `perspective(1000px) rotateX(${((.5 - y) * 5).toFixed(2)}deg) rotateY(${((x - .5) * 6).toFixed(2)}deg)`;
+        if (el.classList.contains('card')) el.style.transform = `perspective(1100px) translateY(-6px) rotateX(${((.5 - y) * 4).toFixed(2)}deg) rotateY(${((x - .5) * 5).toFixed(2)}deg)`;
       });
     }, { passive: true });
     document.querySelectorAll('.card').forEach(c => c.addEventListener('pointerleave', () => { c.style.transform = ''; }));
   }
 
+  /* ---------- nav: a liquid glass pill glides to the hovered or current section link ---------- */
+  const pill = $('.nav-pill'), secLinks = [...document.querySelectorAll('.links .sec')];
+  let hovered = null;
+  function placePill() {
+    const target = hovered || secLinks.find(a => a.classList.contains('on'));
+    if (!pill || !target || !target.offsetWidth) { if (pill) pill.style.opacity = '0'; return; }
+    const box = target.parentElement.getBoundingClientRect(), r = target.getBoundingClientRect();
+    pill.style.width = r.width.toFixed(1) + 'px';
+    pill.style.transform = `translate(${(r.left - box.left).toFixed(1)}px,${(r.top - box.top + (r.height - 36) / 2).toFixed(1)}px)`;
+    pill.style.opacity = '1';
+  }
+  secLinks.forEach(a => {
+    a.addEventListener('pointerenter', () => { hovered = a; placePill(); });
+    a.addEventListener('pointerleave', () => { hovered = null; placePill(); });
+  });
+  nav.addEventListener('transitionend', e => { if (e.target === nav) placePill(); });
+  addEventListener('resize', placePill, { passive: true });
+
   /* ---------- active nav link ---------- */
   const links = [...document.querySelectorAll('.links a[href^="#"]:not(.cta)')];
   const byId = new Map(links.map(a => [a.getAttribute('href').slice(1), a]));
   const io = new IntersectionObserver(entries => entries.forEach(en => {
-    if (en.isIntersecting) { const a = byId.get(en.target.id); links.forEach(l => l.classList.toggle('on', l === a)); }
+    if (en.isIntersecting) { const a = byId.get(en.target.id); links.forEach(l => l.classList.toggle('on', l === a)); placePill(); }
   }), { rootMargin: '-45% 0px -50% 0px' });
   ['about', 'work', 'experience', 'skills', 'contact'].forEach(id => { const s = document.getElementById(id); if (s) io.observe(s); });
 
