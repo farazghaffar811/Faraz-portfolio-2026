@@ -32,7 +32,9 @@
 </nav>
 
 <header class="hero" id="top">
-  <div class="office" id="office" aria-hidden="true"></div>
+  <div class="office" id="office" aria-hidden="true">
+    <video id="officeVideo" src="assets/office.mp4" poster="assets/office-poster.webp" autoplay muted loop playsinline preload="auto" disablepictureinpicture></video>
+  </div>
   <div class="hero-shade" aria-hidden="true"></div>
 
   <div class="intro glass blur">
@@ -47,11 +49,7 @@
   <div class="bubble glass blur" id="bubble" aria-live="polite"><p id="msg"></p></div>
 
   <div class="scene-pos">
-    <div class="scene" id="scene" role="img" aria-label="3D cartoon Faraz in a suit, sitting at his laptop in an evening office. He swivels toward your cursor and spins round to greet you when you move to the center.">
-      <img src="assets/faraz-3d.webp" alt="" width="250" height="672" decoding="async" fetchpriority="high">
-      <div class="desk" aria-hidden="true"></div>
-      <div class="desk-shadow" aria-hidden="true"></div>
-    </div>
+    <div class="scene" id="scene" role="img" aria-label="3D cartoon Faraz in a suit, typing at his laptop in an evening office. He looks toward your cursor, and when you move to the center he spins round, waves and points down to the portfolio."></div>
   </div>
 
   <a class="cue glass blur" href="#about">Explore the portfolio <i aria-hidden="true"></i></a>
@@ -266,8 +264,8 @@
   <div class="wrap"><span>© 2026 Faraz Ghaffar</span><span>Bahawalpur, Pakistan · PKT (UTC+5)</span><a href="#top">Back to top ↑</a></div>
 </footer>
 
-<script src="office.js"></script>
-<script src="character3d.js"></script>
+<script src="avatar-model.js"></script>
+<script src="avatar.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

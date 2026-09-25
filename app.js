@@ -19,7 +19,7 @@
       if (y < hh + 60) {
         const p = Math.min(1, y / hh);
         office.style.transform = `translate3d(0,${(y * .35).toFixed(1)}px,0) scale(1.06)`;
-        scene.style.transform = `translate3d(0,${(y * .12).toFixed(1)}px,0) scale(${(1 - p * .06).toFixed(4)})`;
+        scene.style.transform = `translate3d(0,${(y * .12).toFixed(1)}px,0)`;
         intro.style.opacity = Math.max(0, 1 - p * 1.6).toFixed(3);
         intro.style.translate = `0 ${(-y * .25).toFixed(1)}px`;
         bubble.style.translate = `0 ${(-y * .25).toFixed(1)}px`;
@@ -40,13 +40,19 @@
   addEventListener('resize', onScroll, { passive: true });
   update();
 
-  /* ---------- depth: the office drifts against the cursor ---------- */
+  /* ---------- office footage: plays only while the hero is on screen ---------- */
+  const vid = document.getElementById('officeVideo');
+  if (vid) {
+    if (reduce) { vid.removeAttribute('autoplay'); vid.pause(); } // the poster frame stays
+    else new IntersectionObserver(([e]) => { if (e.isIntersecting) vid.play().catch(() => {}); else vid.pause(); }).observe(hero);
+  }
+
+  /* ---------- depth: the office background drifts against the cursor ---------- */
   if (!reduce) hero.addEventListener('pointermove', e => {
     if (e.pointerType !== 'mouse') return;
     const r = hero.getBoundingClientRect();
     const mx = (e.clientX - r.left) / r.width - .5, my = (e.clientY - r.top) / r.height - .5;
-    office.style.translate = `${(-mx * 26).toFixed(1)}px ${(-my * 14).toFixed(1)}px`;
-    scene.style.translate = `${(mx * 8).toFixed(1)}px 0`;
+    office.style.translate = `${(-mx * 26).toFixed(1)}px ${(-my * 14).toFixed(1)}px`; // the 3D camera adds its own parallax
   }, { passive: true });
 
   /* ---------- liquid glass: sheen follows the pointer, cards tilt ---------- */

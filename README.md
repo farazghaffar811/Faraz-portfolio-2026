@@ -1,8 +1,9 @@
 # Faraz Ghaffar portfolio
 
-Midnight navy + champagne gold, liquid-glass surfaces, and an interactive 3D hero: a cartoon Faraz in a
-suit sits at his laptop in an evening office. Move the cursor left or right and he swivels his chair to look;
-move it to the center and he spins round in the chair, greets you, then leans toward the work below.
+Midnight navy + champagne gold, liquid-glass surfaces, and an interactive 3D hero: a Pixar-style Faraz
+(brown quiff, Chaplin mustache, grey-blue suit) types at his laptop in front of a real, softly focused office full of people at work. He is modelled in
+code, not drawn from a picture, so he stays sharp at any resolution. Move the cursor left or right and he
+looks over; move it to the center and he spins round in his chair, waves, and points down at the portfolio.
 
 ## Files
 
@@ -10,9 +11,10 @@ move it to the center and he spins round in the chair, greets you, then leans to
 | --- | --- |
 | `index.html` | The page |
 | `styles.css` | Theme tokens, liquid glass, layout, scroll-driven reveals, responsive rules |
-| `office.js` | Draws the office background (city window, shelf, lamps) as inline SVG, seeded |
-| `character3d.js` | 3D scene: inflates the portrait into a mesh from its silhouette, seats it in a swivel chair behind a three.js laptop and mug, and animates it (cursor zones, swivel, chair spin, speech bubble). The desk in front is a CSS band |
-| `assets/faraz-3d.webp` | The character image (transparent background); also the first frame and the no-WebGL fallback |
+| `assets/office.mp4` | Background footage: a seamless 11 s loop, soft focus and navy grade baked in (0.55 MB) |
+| `assets/office-poster.webp` | First frame, shown instantly and for reduced-motion visitors |
+| `avatar-model.js` | Builds the 3D character, chair, desk, laptop, mug and plant from three.js primitives and high-res canvas textures |
+| `avatar.js` | Loads three.js, lights and renders the scene, and animates it: cursor zones, arm IK (typing, waving, pointing), blinking, gaze, expressions |
 | `app.js` | Hero parallax, scroll-linked tech ribbon, glass sheen, card tilt, active nav, copy buttons |
 
 ## Deploy
@@ -25,12 +27,12 @@ The repository root is the site: plain HTML, CSS and JS, with no build step and 
 
 ## Performance notes
 
-- three.js loads after the page is up; until then, or without WebGL, the plain image shows with the same motion in CSS 3D.
-- The character loop runs on `requestAnimationFrame` only while the hero is on screen and the tab is visible.
+- three.js loads after the page is up and the scene fades in; the rest of the page never waits for it.
+- The 3D loop runs only while the hero is on screen and the tab is visible; idle typing renders at ~30fps and pixel ratio is capped for large screens.
 - Scroll effects use one passive listener batched per frame; everything animates `transform`/`opacity`.
 - Section reveals use CSS scroll-driven animations (no JS); older browsers simply show the content.
-- The office background is generated SVG; the only image is the 60 KB character WebP.
-- `prefers-reduced-motion` turns off the ambient motion and parallax.
+- The office video is 960x540 with the blur baked in, so the browser does no per-frame filtering; it pauses when the hero scrolls away.
+- `prefers-reduced-motion` turns off the ambient motion and parallax, and shows the poster instead of the video.
 
 ## Links used
 
@@ -38,3 +40,8 @@ The repository root is the site: plain HTML, CSS and JS, with no build step and 
 - LinkedIn: https://www.linkedin.com/in/faraz-ghaffar-a467082a0
 - Fiverr: https://www.fiverr.com/farazghaffar988/design-redesign-wordpress-website-web-development-as-a-full-stack-web-developer
 - Upwork: currently a talent-search link; swap in your direct profile URL (`upwork.com/freelancers/~...`) in `index.html` when you have it.
+
+## Credits
+
+- Background video: "Busy office space" by Mixkit (https://mixkit.co/free-stock-video/busy-office-space-918/),
+  used under the Mixkit Stock Video Free License. Trimmed, looped, blurred and colour graded.
